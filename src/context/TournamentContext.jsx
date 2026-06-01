@@ -69,7 +69,7 @@ function reducer(state, action) {
 
     case 'ADD_PLAYER': {
       const newPlayer = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         name: action.payload.name,
         seat: action.payload.seat || state.players.length + 1,
         rebuys: 0,
@@ -186,13 +186,13 @@ function reducer(state, action) {
       };
 
     case 'TICK': {
-      const { isBreak } = action.payload;
+      const { isBreak, elapsed = 1 } = action.payload;
       if (isBreak) {
         return {
           ...state,
           tournament: {
             ...state.tournament,
-            breakTimeRemaining: Math.max(0, state.tournament.breakTimeRemaining - 1),
+            breakTimeRemaining: Math.max(0, state.tournament.breakTimeRemaining - elapsed),
           },
         };
       }
@@ -200,7 +200,7 @@ function reducer(state, action) {
         ...state,
         tournament: {
           ...state.tournament,
-          timeRemaining: Math.max(0, state.tournament.timeRemaining - 1),
+          timeRemaining: Math.max(0, state.tournament.timeRemaining - elapsed),
         },
       };
     }

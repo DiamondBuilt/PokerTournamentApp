@@ -7,7 +7,7 @@ export const BLIND_TEMPLATES = {
     startingChips: 20000,
     breakLevels: [5, 10, 15],
     levels: [
-      { level: 1, sb: 25, bb: 100, ante: 0 },
+      { level: 1, sb: 25, bb: 50, ante: 0 },
       { level: 2, sb: 50, bb: 100, ante: 0 },
       { level: 3, sb: 75, bb: 150, ante: 0 },
       { level: 4, sb: 100, bb: 200, ante: 0 },

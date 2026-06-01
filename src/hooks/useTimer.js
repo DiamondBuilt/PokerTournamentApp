@@ -5,36 +5,40 @@ import { playAlertForTime, playLevelUpChime, playBreakChime } from '../utils/aud
 export function useTimer() {
   const { state, dispatch } = useTournament();
   const intervalRef = useRef(null);
+  // Track the real wall-clock time of the last tick so backgrounded tabs stay accurate
+  const lastTickAt = useRef(null);
   const { tournament, structure } = state;
 
   const isRunning = tournament.status === 'playing' || tournament.status === 'break';
   const isBreak = tournament.status === 'break';
 
   const tick = useCallback(() => {
+    const now = Date.now();
+    // Calculate actual elapsed seconds since last tick (handles background throttling)
+    const elapsed = lastTickAt.current ? Math.round((now - lastTickAt.current) / 1000) : 1;
+    lastTickAt.current = now;
+
     const { tournament, structure } = state;
     const isBreak = tournament.status === 'break';
     const timeKey = isBreak ? 'breakTimeRemaining' : 'timeRemaining';
     const current = tournament[timeKey];
+    const next = Math.max(0, current - elapsed);
 
-    // Play audio alerts
+    // Play audio alerts based on the new time value (only during play, not breaks)
     if (!isBreak) {
-      playAlertForTime(current);
+      playAlertForTime(next);
     }
 
-    if (current <= 1) {
-      // Time's up
+    if (next <= 0) {
       if (isBreak) {
-        // Break ended -> resume playing
         playLevelUpChime();
         dispatch({ type: 'END_BREAK' });
       } else {
-        // Level ended -> check if next is a break
-        const nextLevel = tournament.currentLevel + 1;
-        const isBreakNext = structure.breakLevels && structure.breakLevels.includes(nextLevel - 1);
-        // breakLevels contains the level number AFTER which break occurs
-        const shouldBreak = structure.breakLevels && structure.breakLevels.includes(tournament.currentLevel);
+        const shouldBreak =
+          structure.breakLevels && structure.breakLevels.includes(tournament.currentLevel);
+        const hasNextLevel = tournament.currentLevel + 1 <= structure.levels.length;
 
-        if (shouldBreak && nextLevel <= structure.levels.length) {
+        if (shouldBreak && hasNextLevel) {
           playBreakChime();
           dispatch({ type: 'START_BREAK' });
         } else {
@@ -43,11 +47,10 @@ export function useTimer() {
         }
       }
     } else {
-      dispatch({ type: 'TICK', payload: { isBreak } });
+      dispatch({ type: 'TICK', payload: { isBreak, elapsed } });
     }
   }, [state, dispatch]);
 
-  // We use a ref to always have the latest tick fn without re-creating the interval
   const tickRef = useRef(tick);
   useEffect(() => {
     tickRef.current = tick;
@@ -55,10 +58,10 @@ export function useTimer() {
 
   useEffect(() => {
     if (isRunning) {
-      intervalRef.current = setInterval(() => {
-        tickRef.current();
-      }, 1000);
+      lastTickAt.current = Date.now();
+      intervalRef.current = setInterval(() => tickRef.current(), 1000);
     } else {
+      lastTickAt.current = null;
       clearInterval(intervalRef.current);
     }
     return () => clearInterval(intervalRef.current);
