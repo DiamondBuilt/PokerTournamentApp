@@ -3,6 +3,25 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "Poker Tournament Director — plan and run poker tournaments end to end: blind structures, a level timer with pause/resume, player management, payouts and final results.",
+  "license": "MIT",
+  "homepage": "https://github.com/DiamondBuilt/PokerTournamentApp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DiamondBuilt/PokerTournamentApp.git"
+  },
+  "keywords": [
+    "poker",
+    "tournament",
+    "blinds",
+    "timer",
+    "clock",
+    "pwa",
+    "react"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -24,9 +24,11 @@ export function useTimer() {
     const current = tournament[timeKey];
     const next = Math.max(0, current - elapsed);
 
-    // Play audio alerts based on the new time value (only during play, not breaks)
+    // Play audio alerts based on the new time value (only during play, not breaks).
+    // Pass the previous value too so a threshold skipped by a throttled
+    // background tab still fires when it catches up.
     if (!isBreak) {
-      playAlertForTime(next);
+      playAlertForTime(next, current);
     }
 
     if (next <= 0) {

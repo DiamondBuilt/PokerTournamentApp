@@ -5,7 +5,7 @@ import {
   calculateTotalPrizePool,
   formatMoney,
 } from '../../utils/payoutCalculator';
-import { formatChips } from '../../utils/blindStructures';
+import { formatChips, BLIND_TEMPLATES } from '../../utils/blindStructures';
 
 function fmtTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -102,7 +102,7 @@ export default function ReviewSetup({ onPrev }) {
           <button className="btn-ghost btn-sm" onClick={() => goToStep(2)}>Edit</button>
         </div>
         <div className="review-grid">
-          <ReviewRow label="Template" value={structure.levels.length > 0 ? structure.template : '—'} />
+          <ReviewRow label="Template" value={BLIND_TEMPLATES[structure.template]?.name || structure.template} />
           <ReviewRow label="Starting Chips" value={formatChips(structure.startingChips)} />
           <ReviewRow label="Level Duration" value={fmtTime(structure.levelDuration)} />
           <ReviewRow label="Break Duration" value={fmtTime(structure.breakDuration)} />

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useTournament } from '../../context/TournamentContext';
 import { useTimer } from '../../hooks/useTimer';
+import { useWakeLock } from '../../hooks/useWakeLock';
+import { setMuted, isMuted } from '../../utils/audioManager';
 import TimerDisplay from './TimerDisplay';
 import BlindDisplay from './BlindDisplay';
 import StatsBar from './StatsBar';
@@ -15,10 +17,20 @@ export default function Dashboard() {
 
   const [showModal, setShowModal] = useState(null); // 'eliminate' | 'players' | 'schedule' | 'payouts' | null
   const [addPlayerName, setAddPlayerName] = useState('');
+  const [muted, setMutedState] = useState(isMuted());
 
   const isPlaying = tournament.status === 'playing';
   const isBreak = tournament.status === 'break';
   const isPaused = tournament.status === 'paused';
+
+  // Keep the screen awake while the clock is actively counting down.
+  useWakeLock(isPlaying || isBreak);
+
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    setMutedState(next);
+  };
 
   const currentLevelData = structure.levels[tournament.currentLevel - 1] || structure.levels[0];
   const activePlayers = players.filter((p) => p.status === 'active');
@@ -110,6 +122,13 @@ export default function Dashboard() {
             </button>
             <button className="ctrl-sm" onClick={() => setShowModal('payouts')}>
               💰 Payouts
+            </button>
+            <button
+              className="ctrl-sm"
+              onClick={toggleMute}
+              title={muted ? 'Unmute alerts' : 'Mute alerts'}
+            >
+              {muted ? '🔇 Muted' : '🔔 Sound'}
             </button>
             <button className="ctrl-sm ctrl-reset" onClick={handleReset}>
               ↩ Reset
