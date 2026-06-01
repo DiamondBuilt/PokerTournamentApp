@@ -1,0 +1,120 @@
+export const BLIND_TEMPLATES = {
+  deep: {
+    name: 'Deep Stack',
+    description: '20 min levels, 20,000 starting chips',
+    levelDuration: 20 * 60,
+    breakDuration: 15 * 60,
+    startingChips: 20000,
+    breakLevels: [5, 10, 15],
+    levels: [
+      { level: 1, sb: 25, bb: 100, ante: 0 },
+      { level: 2, sb: 50, bb: 100, ante: 0 },
+      { level: 3, sb: 75, bb: 150, ante: 0 },
+      { level: 4, sb: 100, bb: 200, ante: 0 },
+      { level: 5, sb: 150, bb: 300, ante: 25 },
+      { level: 6, sb: 200, bb: 400, ante: 50 },
+      { level: 7, sb: 250, bb: 500, ante: 75 },
+      { level: 8, sb: 300, bb: 600, ante: 100 },
+      { level: 9, sb: 400, bb: 800, ante: 100 },
+      { level: 10, sb: 500, bb: 1000, ante: 150 },
+      { level: 11, sb: 600, bb: 1200, ante: 200 },
+      { level: 12, sb: 800, bb: 1600, ante: 200 },
+      { level: 13, sb: 1000, bb: 2000, ante: 300 },
+      { level: 14, sb: 1500, bb: 3000, ante: 500 },
+      { level: 15, sb: 2000, bb: 4000, ante: 500 },
+      { level: 16, sb: 3000, bb: 6000, ante: 1000 },
+      { level: 17, sb: 4000, bb: 8000, ante: 1000 },
+      { level: 18, sb: 5000, bb: 10000, ante: 1500 },
+      { level: 19, sb: 6000, bb: 12000, ante: 2000 },
+      { level: 20, sb: 8000, bb: 16000, ante: 2000 },
+    ],
+  },
+  standard: {
+    name: 'Standard',
+    description: '15 min levels, 10,000 starting chips',
+    levelDuration: 15 * 60,
+    breakDuration: 10 * 60,
+    startingChips: 10000,
+    breakLevels: [4, 8, 12],
+    levels: [
+      { level: 1, sb: 25, bb: 50, ante: 0 },
+      { level: 2, sb: 50, bb: 100, ante: 0 },
+      { level: 3, sb: 75, bb: 150, ante: 0 },
+      { level: 4, sb: 100, bb: 200, ante: 25 },
+      { level: 5, sb: 150, bb: 300, ante: 50 },
+      { level: 6, sb: 200, bb: 400, ante: 75 },
+      { level: 7, sb: 300, bb: 600, ante: 100 },
+      { level: 8, sb: 400, bb: 800, ante: 100 },
+      { level: 9, sb: 600, bb: 1200, ante: 200 },
+      { level: 10, sb: 800, bb: 1600, ante: 200 },
+      { level: 11, sb: 1000, bb: 2000, ante: 300 },
+      { level: 12, sb: 1500, bb: 3000, ante: 500 },
+      { level: 13, sb: 2000, bb: 4000, ante: 500 },
+      { level: 14, sb: 3000, bb: 6000, ante: 1000 },
+      { level: 15, sb: 4000, bb: 8000, ante: 1000 },
+      { level: 16, sb: 6000, bb: 12000, ante: 2000 },
+    ],
+  },
+  turbo: {
+    name: 'Turbo',
+    description: '10 min levels, 10,000 starting chips',
+    levelDuration: 10 * 60,
+    breakDuration: 10 * 60,
+    startingChips: 10000,
+    breakLevels: [6, 12],
+    levels: [
+      { level: 1, sb: 50, bb: 100, ante: 0 },
+      { level: 2, sb: 100, bb: 200, ante: 0 },
+      { level: 3, sb: 150, bb: 300, ante: 25 },
+      { level: 4, sb: 200, bb: 400, ante: 50 },
+      { level: 5, sb: 300, bb: 600, ante: 75 },
+      { level: 6, sb: 400, bb: 800, ante: 100 },
+      { level: 7, sb: 600, bb: 1200, ante: 150 },
+      { level: 8, sb: 800, bb: 1600, ante: 200 },
+      { level: 9, sb: 1000, bb: 2000, ante: 300 },
+      { level: 10, sb: 1500, bb: 3000, ante: 500 },
+      { level: 11, sb: 2000, bb: 4000, ante: 500 },
+      { level: 12, sb: 3000, bb: 6000, ante: 1000 },
+      { level: 13, sb: 4000, bb: 8000, ante: 1000 },
+      { level: 14, sb: 6000, bb: 12000, ante: 2000 },
+    ],
+  },
+  superturbo: {
+    name: 'Super Turbo',
+    description: '7 min levels, 5,000 starting chips',
+    levelDuration: 7 * 60,
+    breakDuration: 10 * 60,
+    startingChips: 5000,
+    breakLevels: [8],
+    levels: [
+      { level: 1, sb: 100, bb: 200, ante: 0 },
+      { level: 2, sb: 200, bb: 400, ante: 50 },
+      { level: 3, sb: 300, bb: 600, ante: 75 },
+      { level: 4, sb: 400, bb: 800, ante: 100 },
+      { level: 5, sb: 600, bb: 1200, ante: 150 },
+      { level: 6, sb: 800, bb: 1600, ante: 200 },
+      { level: 7, sb: 1000, bb: 2000, ante: 300 },
+      { level: 8, sb: 1500, bb: 3000, ante: 500 },
+      { level: 9, sb: 2000, bb: 4000, ante: 500 },
+      { level: 10, sb: 3000, bb: 6000, ante: 1000 },
+      { level: 11, sb: 4000, bb: 8000, ante: 1000 },
+      { level: 12, sb: 6000, bb: 12000, ante: 2000 },
+    ],
+  },
+};
+
+export function getStructure(templateKey, overrides = {}) {
+  const template = BLIND_TEMPLATES[templateKey];
+  if (!template) return BLIND_TEMPLATES.standard;
+  return {
+    ...template,
+    template: templateKey,
+    ...overrides,
+  };
+}
+
+export function formatChips(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
