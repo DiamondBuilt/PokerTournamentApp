@@ -116,7 +116,7 @@ export default function ReviewSetup({ onPrev }) {
         <div className="review-section card mt-4">
           <div className="review-header">
             <h3 className="review-title">Payouts ({payouts.mode})</h3>
-            <button className="btn-ghost btn-sm" onClick={() => goToStep(3)}>Edit</button>
+            <button className="btn-ghost btn-sm" onClick={() => goToStep(4)}>Edit</button>
           </div>
           <div className="payout-compact">
             {payoutList.map((p) => (
@@ -172,7 +172,8 @@ export default function ReviewSetup({ onPrev }) {
         }
         .review-row:last-child { border-bottom: none; }
         .review-label {
-          width: 160px;
+          min-width: 100px;
+          max-width: 160px;
           flex-shrink: 0;
           color: var(--muted);
           font-size: 0.82rem;
