@@ -3,13 +3,16 @@ import { useTournament } from '../../context/TournamentContext';
 import TournamentInfo from './TournamentInfo';
 import PlayerSetup from './PlayerSetup';
 import BlindStructureSetup from './BlindStructureSetup';
+import ChipSetup from './ChipSetup';
 import PayoutSetup from './PayoutSetup';
 import ReviewSetup from './ReviewSetup';
+import ThemePicker from '../ThemePicker';
 
 const STEPS = [
   { label: 'Tournament Info', icon: '♠' },
   { label: 'Players',         icon: '♥' },
   { label: 'Blind Structure', icon: '♦' },
+  { label: 'Chip Setup',      icon: '🎲' },
   { label: 'Payouts',         icon: '♣' },
   { label: 'Review & Start',  icon: '🏆' },
 ];
@@ -24,11 +27,12 @@ export default function SetupWizard() {
 
   const renderStep = () => {
     switch (step) {
-      case 0: return <TournamentInfo onNext={next} />;
-      case 1: return <PlayerSetup    onNext={next} onPrev={prev} />;
+      case 0: return <TournamentInfo      onNext={next} />;
+      case 1: return <PlayerSetup         onNext={next} onPrev={prev} />;
       case 2: return <BlindStructureSetup onNext={next} onPrev={prev} />;
-      case 3: return <PayoutSetup    onNext={next} onPrev={prev} />;
-      case 4: return <ReviewSetup    onPrev={prev} />;
+      case 3: return <ChipSetup           onNext={next} onPrev={prev} />;
+      case 4: return <PayoutSetup         onNext={next} onPrev={prev} />;
+      case 5: return <ReviewSetup         onPrev={prev} />;
       default: return null;
     }
   };
@@ -41,6 +45,7 @@ export default function SetupWizard() {
           <span className="logo-suit">♠</span>
           <span className="logo-text">Poker Tournament Director</span>
         </div>
+        <ThemePicker />
       </header>
 
       {/* Step Progress */}
@@ -66,16 +71,20 @@ export default function SetupWizard() {
       <style>{`
         .setup-wizard {
           min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           flex-direction: column;
           background: var(--bg);
+          padding-top: env(safe-area-inset-top);
         }
         .setup-header {
           background: var(--surface);
           border-bottom: 1px solid var(--border);
-          padding: 16px 32px;
+          padding: 16px max(32px, env(safe-area-inset-right, 0px));
+          padding-left: max(32px, env(safe-area-inset-left, 0px));
           display: flex;
           align-items: center;
+          justify-content: space-between;
         }
         .setup-logo {
           display: flex;
@@ -99,7 +108,10 @@ export default function SetupWizard() {
           background: var(--surface);
           border-bottom: 1px solid var(--border);
           overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
         }
+        .setup-progress::-webkit-scrollbar { display: none; }
         .step-pill {
           display: flex;
           align-items: center;
@@ -128,12 +140,13 @@ export default function SetupWizard() {
         .setup-content {
           flex: 1;
           padding: 32px;
+          padding-bottom: max(32px, env(safe-area-inset-bottom, 0px));
           max-width: 860px;
           margin: 0 auto;
           width: 100%;
         }
         @media (max-width: 640px) {
-          .setup-content { padding: 20px 16px; }
+          .setup-content { padding: 20px 16px; padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)); }
           .setup-progress { padding: 12px 16px; }
           .step-label { display: none; }
         }

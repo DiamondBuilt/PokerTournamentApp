@@ -154,7 +154,7 @@ export default function BlindStructureSetup({ onNext, onPrev }) {
       <div className="step-actions mt-6">
         <button className="btn-ghost" onClick={onPrev}>← Back</button>
         <button className="btn-primary btn-lg" onClick={onNext}>
-          Next: Payouts →
+          Next: Chip Setup →
         </button>
       </div>
 

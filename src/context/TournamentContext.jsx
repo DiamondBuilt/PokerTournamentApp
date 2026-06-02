@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { BLIND_TEMPLATES } from '../utils/blindStructures';
+import { applyTheme } from '../utils/themes';
 
 const TournamentContext = createContext(null);
 
@@ -33,6 +34,10 @@ export const initialState = {
     mode: 'auto',
     customSplit: [],
   },
+  chipConfig: {
+    denominations: [5, 25, 100, 500, 1000],
+  },
+  theme: 'dark',
   tournament: {
     phase: 'setup',
     status: 'paused',
@@ -155,6 +160,12 @@ function reducer(state, action) {
       return { ...state, players: updated };
     }
 
+    case 'UPDATE_CHIP_CONFIG':
+      return { ...state, chipConfig: { ...state.chipConfig, ...action.payload } };
+
+    case 'SET_THEME':
+      return { ...state, theme: action.payload };
+
     case 'UPDATE_PAYOUTS':
       return { ...state, payouts: { ...state.payouts, ...action.payload } };
 
@@ -262,6 +273,8 @@ function reducer(state, action) {
       return {
         ...initialState,
         config: state.config,
+        chipConfig: state.chipConfig,
+        theme: state.theme,
       };
 
     case 'LOAD_STATE':
@@ -280,9 +293,14 @@ export function TournamentProvider({ children }) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Always pause on load to avoid running timer without user intent
+        // Apply saved theme immediately to avoid flash-of-default on reload
+        if (parsed.theme) applyTheme(parsed.theme);
+        // Merge with init to ensure new fields (chipConfig, theme) exist for old saves
         return {
+          ...init,
           ...parsed,
+          chipConfig: parsed.chipConfig ?? init.chipConfig,
+          theme: parsed.theme ?? init.theme,
           tournament: {
             ...parsed.tournament,
             status:

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTournament } from '../../context/TournamentContext';
 import { formatChips } from '../../utils/blindStructures';
 import { calculateTotalPrizePool, formatMoney } from '../../utils/payoutCalculator';
@@ -7,19 +7,27 @@ export default function StatsBar() {
   const { state } = useTournament();
   const { players, config, structure, tournament } = state;
 
+  const [narrow, setNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const handler = (e) => setNarrow(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   const activePlayers = players.filter((p) => p.status === 'active');
   const totalPlayers = players.length;
-  const totalEntries = totalPlayers + players.reduce((sum, p) => sum + p.rebuys, 0);
   const totalRebuys = players.reduce((sum, p) => sum + p.rebuys, 0);
   const totalAddOns = players.reduce((sum, p) => sum + p.addOns, 0);
 
-  // Prize pool: entries + rebuys + add-ons
   const prizePool =
     totalPlayers * config.buyIn +
     totalRebuys * config.rebuyAmount +
     totalAddOns * config.addOnAmount;
 
-  // Average and chip leader stats (conceptual — no chip tracking, just format)
   const totalChipsInPlay =
     totalPlayers * structure.startingChips +
     totalRebuys * config.rebuyChips +
@@ -31,9 +39,9 @@ export default function StatsBar() {
 
   const stats = [
     { label: 'Players', value: `${activePlayers.length} / ${totalPlayers}`, sub: 'active / total' },
-    { label: 'Avg Stack', value: formatChips(avgStack), sub: 'chips' },
-    { label: 'Prize Pool', value: prizePool > 0 ? formatMoney(prizePool) : '—', sub: 'total' },
-    totalRebuys > 0 && { label: 'Rebuys', value: totalRebuys, sub: 'total' },
+    !narrow && { label: 'Avg Stack', value: formatChips(avgStack), sub: 'chips' },
+    prizePool > 0 && { label: 'Prize Pool', value: formatMoney(prizePool), sub: 'total' },
+    !narrow && totalRebuys > 0 && { label: 'Rebuys', value: totalRebuys, sub: 'total' },
   ].filter(Boolean);
 
   return (
@@ -54,7 +62,8 @@ export default function StatsBar() {
         .stats-bar {
           background: var(--surface);
           border-bottom: 1px solid var(--border);
-          padding: 10px 20px;
+          padding: 10px max(20px, env(safe-area-inset-right, 0px));
+          padding-left: max(20px, env(safe-area-inset-left, 0px));
           display: flex;
           align-items: center;
           justify-content: space-between;

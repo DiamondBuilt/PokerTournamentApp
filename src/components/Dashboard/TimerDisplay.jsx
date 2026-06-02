@@ -38,6 +38,11 @@ export default function TimerDisplay() {
           text-shadow: 0 0 40px currentColor;
           user-select: none;
         }
+        @media (max-height: 500px) and (orientation: landscape) {
+          .timer-display {
+            font-size: clamp(3rem, 12vh, 6rem);
+          }
+        }
         .timer-green { color: #22c55e; }
         .timer-amber { color: #f59e0b; }
         .timer-red   { color: #ef4444; }

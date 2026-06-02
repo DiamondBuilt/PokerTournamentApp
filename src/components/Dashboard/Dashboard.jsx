@@ -9,6 +9,7 @@ import StatsBar from './StatsBar';
 import PlayerManagement from '../Players/PlayerManagement';
 import BlindSchedule from '../Schedule/BlindSchedule';
 import PayoutView from '../Payouts/PayoutView';
+import ThemePicker from '../ThemePicker';
 
 export default function Dashboard() {
   const { state, dispatch } = useTournament();
@@ -117,6 +118,9 @@ export default function Dashboard() {
 
           {/* Secondary controls */}
           <div className="secondary-controls">
+            <button className="ctrl-sm ctrl-players-btn" onClick={() => setShowModal('players')}>
+              👥 Players
+            </button>
             <button className="ctrl-sm" onClick={() => setShowModal('schedule')}>
               📋 Blind Schedule
             </button>
@@ -133,6 +137,7 @@ export default function Dashboard() {
             <button className="ctrl-sm ctrl-reset" onClick={handleReset}>
               ↩ Reset
             </button>
+            <ThemePicker popupAlign="center" />
           </div>
         </div>
 
@@ -208,6 +213,12 @@ export default function Dashboard() {
         />
       )}
 
+      {showModal === 'players' && (
+        <FullModal onClose={() => setShowModal(null)} title="Players">
+          <PlayerManagement />
+        </FullModal>
+      )}
+
       {showModal === 'schedule' && (
         <FullModal onClose={() => setShowModal(null)} title="Blind Schedule">
           <BlindSchedule />
@@ -223,9 +234,11 @@ export default function Dashboard() {
       <style>{`
         .dashboard {
           min-height: 100vh;
+          min-height: 100dvh;
           display: flex;
           flex-direction: column;
           background: var(--bg);
+          padding-top: env(safe-area-inset-top);
         }
         .dashboard-main {
           flex: 1;
@@ -433,11 +446,27 @@ export default function Dashboard() {
           flex: 1;
           overflow-y: auto;
           padding: 24px;
+          padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
         }
+        /* Players button visible only on mobile (sidebar hidden) */
+        .ctrl-players-btn { display: none; }
+
         @media (max-width: 768px) {
           .sidebar { display: none; }
+          .ctrl-players-btn { display: inline-flex; align-items: center; }
           .controls { gap: 8px; }
-          .ctrl-btn { padding: 10px 14px; font-size: 0.82rem; }
+          .ctrl-btn { padding: 12px 16px; font-size: 0.82rem; min-height: 44px; }
+          .ctrl-sm { padding: 10px 14px; font-size: 0.82rem; min-height: 44px; }
+        }
+
+        /* Landscape layout on small-height devices (phone rotated) */
+        @media (max-height: 500px) and (orientation: landscape) {
+          .center-col { padding: 8px 16px; }
+          .status-label-row { margin-bottom: 4px; height: 20px; }
+          .controls { margin-top: 10px; gap: 6px; }
+          .ctrl-btn { padding: 8px 12px; font-size: 0.78rem; min-height: 36px; }
+          .secondary-controls { margin-top: 8px; gap: 6px; }
+          .ctrl-sm { padding: 6px 10px; font-size: 0.75rem; min-height: 36px; }
         }
       `}</style>
     </div>
