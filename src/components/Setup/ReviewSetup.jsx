@@ -6,6 +6,7 @@ import {
   formatMoney,
 } from '../../utils/payoutCalculator';
 import { formatChips, BLIND_TEMPLATES } from '../../utils/blindStructures';
+import { linkPlayers } from '../../data/services/linkService';
 
 function fmtTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -28,9 +29,17 @@ export default function ReviewSetup({ onPrev }) {
       )
     : [];
 
-  const startTournament = () => {
-    if (playerCount === 0) {
-      // Start with no players - fine, add later
+  const startTournament = async () => {
+    // Link each player to a persistent record (creating on first participation)
+    // and stamp the persistentId onto the live state via the existing
+    // UPDATE_PLAYER action. Degrades silently if offline storage is unavailable.
+    try {
+      const links = await linkPlayers(players);
+      links.forEach(({ id, persistentId }) =>
+        dispatch({ type: 'UPDATE_PLAYER', payload: { id, updates: { persistentId } } })
+      );
+    } catch (_) {
+      /* persistent linking is best-effort; the tournament starts regardless */
     }
     dispatch({ type: 'START_TOURNAMENT' });
   };
