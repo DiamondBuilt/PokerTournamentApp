@@ -32,9 +32,16 @@ export default function CashSessionView({ sessionId, onBack }) {
   const ended = session.status === 'ended';
   const totals = sessionTotals(session);
 
+  const [saving, setSaving] = useState(false);
   const handleEnd = async () => {
-    await finalizeSession(session);
-    setEnding(false);
+    if (saving) return;
+    setSaving(true);
+    try {
+      await finalizeSession(session);
+      setEnding(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const durationLabel = () => {
@@ -165,7 +172,9 @@ export default function CashSessionView({ sessionId, onBack }) {
               </p>
               <div className="cash-end-actions">
                 <button className="btn-ghost btn-sm" onClick={() => setEnding(false)}>Cancel</button>
-                <button className="btn-red btn-sm" onClick={handleEnd}>End &amp; Save</button>
+                <button className="btn-red btn-sm" onClick={handleEnd} disabled={saving}>
+                  {saving ? 'Saving…' : 'End & Save'}
+                </button>
               </div>
             </div>
           )}

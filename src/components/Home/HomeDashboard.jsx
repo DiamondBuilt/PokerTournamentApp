@@ -4,6 +4,7 @@ import { useTournament } from '../../context/TournamentContext';
 import { useData } from '../../context/DataContext';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { tournamentsRepo } from '../../data/repositories/tournamentsRepo';
+import { cashSessionsRepo } from '../../data/repositories/cashSessionsRepo';
 import { playersRepo } from '../../data/repositories/playersRepo';
 import { computeStandings } from '../../data/services/standingsService';
 import { formatMoney } from '../../utils/payoutCalculator';
@@ -15,6 +16,7 @@ export default function HomeDashboard() {
 
   const recent = useLiveQuery(() => tournamentsRepo.getAllRecent(), [], undefined);
   const playerCount = useLiveQuery(() => playersRepo.count(), [], undefined);
+  const activeCash = useLiveQuery(() => cashSessionsRepo.getActive(), [], undefined);
   const activeSeasonId = settings?.activeSeasonId || null;
   const seasonData = useLiveQuery(
     () => (activeSeasonId ? computeStandings(activeSeasonId) : Promise.resolve(null)),
@@ -37,6 +39,16 @@ export default function HomeDashboard() {
           <div>
             <div className="home-resume-label">Tournament in progress</div>
             <div className="home-resume-name">{state.config.name}</div>
+          </div>
+          <button className="btn-primary">Resume →</button>
+        </div>
+      )}
+
+      {activeCash && (
+        <div className="home-resume card" onClick={() => navigate('/cash')}>
+          <div>
+            <div className="home-resume-label">Cash session in progress</div>
+            <div className="home-resume-name">{activeCash.name}</div>
           </div>
           <button className="btn-primary">Resume →</button>
         </div>

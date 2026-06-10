@@ -102,7 +102,16 @@ function reducer(state, action) {
     case 'ELIMINATE_PLAYER': {
       const { playerId, position } = action.payload;
       const activePlayers = state.players.filter((p) => p.status === 'active');
-      const finishPos = position || activePlayers.length;
+      // Finish positions must be strictly decreasing and never collide. Using
+      // the active count alone breaks if a player is added after others have
+      // busted (the field grows again), so derive from the lowest position
+      // already handed out: each new bust-out finishes exactly one place better.
+      const assigned = state.players
+        .filter((p) => p.status === 'eliminated' && p.finishPosition != null)
+        .map((p) => p.finishPosition);
+      const lowestAssigned = assigned.length > 0 ? Math.min(...assigned) : null;
+      const finishPos =
+        position || (lowestAssigned != null ? lowestAssigned - 1 : activePlayers.length);
       const updatedPlayers = state.players.map((p) =>
         p.id === playerId
           ? {
@@ -147,7 +156,15 @@ function reducer(state, action) {
     case 'REBUY_PLAYER': {
       const updated = state.players.map((p) =>
         p.id === action.payload
-          ? { ...p, rebuys: p.rebuys + 1, status: 'active' }
+          ? {
+              ...p,
+              rebuys: p.rebuys + 1,
+              status: 'active',
+              // Coming back in clears any finish a prior bust-out recorded, so
+              // the position-assignment logic stays consistent.
+              finishPosition: null,
+              eliminatedLevel: null,
+            }
           : p
       );
       return { ...state, players: updated };

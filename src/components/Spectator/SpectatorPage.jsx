@@ -62,14 +62,20 @@ export default function SpectatorPage() {
     .filter((p) => p.status === 'eliminated')
     .sort((a, b) => (a.finishPosition || 99) - (b.finishPosition || 99));
 
-  const totalChips =
-    running &&
-    players.reduce(
-      (sum, p) =>
-        sum + t.structure.startingChips + (p.rebuys || 0) * (t.config.rebuyChips || 0) + (p.addOns || 0) * (t.config.addOnChips || 0),
-      0
-    );
-  const avgStack = active.length > 0 ? Math.round(totalChips / active.length) : 0;
+  // Total chips in play come from every entry (rebuys/add-ons add chips even
+  // after a player busts), but the average stack is shared among the players
+  // still seated — so divide the whole pool by the active count.
+  const chipsInPlay = running
+    ? players.reduce(
+        (sum, p) =>
+          sum +
+          t.structure.startingChips +
+          (p.rebuys || 0) * (t.config.rebuyChips || 0) +
+          (p.addOns || 0) * (t.config.addOnChips || 0),
+        0
+      )
+    : 0;
+  const avgStack = active.length > 0 ? Math.round(chipsInPlay / active.length) : 0;
 
   return (
     <div className="spec">
@@ -77,8 +83,8 @@ export default function SpectatorPage() {
         <>
           <header className="spec-head">
             <h1 className="spec-name">{t.config.name}</h1>
-            <span className={`spec-status ${tournament.status}`}>
-              {tournament.phase === 'complete' ? 'FINISHED' : isBreak ? 'ON BREAK' : tournament.status.toUpperCase()}
+            <span className={`spec-status ${tournament.status || ''}`}>
+              {tournament.phase === 'complete' ? 'FINISHED' : isBreak ? 'ON BREAK' : (tournament.status || '').toUpperCase()}
             </span>
           </header>
 

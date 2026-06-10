@@ -89,7 +89,7 @@ export async function removeLastBuyIn(session, persistentId) {
 }
 
 export async function setCashOut(session, persistentId, value) {
-  const cashOut = value === '' || value == null ? null : Number(value);
+  const cashOut = value === '' || value == null ? null : Math.max(0, Number(value) || 0);
   const next = mapPlayer(session, persistentId, (p) => ({ ...p, cashOut }));
   await cashSessionsRepo.upsert(next);
   return next;
@@ -107,15 +107,30 @@ export async function updateMeta(session, patch) {
   return next;
 }
 
+// Guards concurrent finalize calls within a session (e.g. a fast double-tap of
+// "End & Save" before the first await resolves) so stats can't be applied
+// twice. The persisted `finalized` flag covers reloads / cross-session calls.
+const finalizeInFlight = new Map();
+
 /**
  * End a session: freeze totals, stamp the active season, and roll results
- * into lifetime player stats — exactly once (the `finalized` flag guards
- * against ending twice).
+ * into lifetime player stats — exactly once (the in-flight guard plus the
+ * persisted `finalized` flag prevent double-counting).
  */
 export async function finalizeSession(session) {
+  if (finalizeInFlight.has(session.id)) return finalizeInFlight.get(session.id);
+  const promise = doFinalize(session).finally(() => finalizeInFlight.delete(session.id));
+  finalizeInFlight.set(session.id, promise);
+  return promise;
+}
+
+async function doFinalize(session) {
   const ok = await openDb();
   if (!ok) return null;
-  if (session.finalized) return session;
+  // Re-read the latest persisted copy so the flag check reflects any finalize
+  // that already committed (not just the snapshot the caller passed in).
+  const current = (await cashSessionsRepo.getById(session.id)) || session;
+  if (current.finalized) return current;
 
   const { players } = sessionTotals(session);
   const settings = await settingsRepo.get();

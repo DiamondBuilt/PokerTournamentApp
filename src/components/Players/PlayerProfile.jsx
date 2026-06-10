@@ -40,13 +40,26 @@ export default function PlayerProfile({ player, onClose }) {
   );
 
   const stats = player.stats || {};
+  const [saveError, setSaveError] = useState(null);
 
   const save = async () => {
+    const newKey = toNameKey(form.name) || player.nameKey;
+    // A name change that collides with another person would make two records
+    // share one match key, after which lookups attach events to the wrong one.
+    // Block it rather than silently corrupt identity.
+    if (newKey !== player.nameKey) {
+      const clash = await playersRepo.getByNameKey(newKey);
+      if (clash && clash.id !== player.id) {
+        setSaveError(`Another player named "${clash.name}" already exists. Pick a different name (try a nickname or initial).`);
+        return;
+      }
+    }
+    setSaveError(null);
     await playersRepo.upsert({
       ...player,
       ...form,
       name: form.name.trim() || player.name,
-      nameKey: toNameKey(form.name) || player.nameKey,
+      nameKey: newKey,
     });
     setEditing(false);
   };
@@ -118,6 +131,7 @@ export default function PlayerProfile({ player, onClose }) {
             <Field label="Email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
             <Field label="Phone" value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
             <Field label="Notes" value={form.notes} onChange={(v) => setForm({ ...form, notes: v })} textarea />
+            {saveError && <p className="profile-save-error">{saveError}</p>}
             <div className="profile-form-actions">
               <button className="btn-ghost btn-sm" onClick={() => setEditing(false)}>Cancel</button>
               <button className="btn-green btn-sm" onClick={save}>Save</button>
@@ -133,6 +147,7 @@ export default function PlayerProfile({ player, onClose }) {
           padding: 16px; z-index: 100;
         }
         .profile-modal { width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; }
+        .profile-save-error { color: var(--red-light); font-size: 0.82rem; font-weight: 600; }
         .profile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .profile-name { color: var(--gold); font-size: 1.4rem; }
         .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 8px; margin-bottom: 16px; }
