@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { tournamentsRepo } from '../../data/repositories/tournamentsRepo';
+import { cashSessionsRepo } from '../../data/repositories/cashSessionsRepo';
 import { playersRepo, toNameKey } from '../../data/repositories/playersRepo';
 import { formatMoney } from '../../utils/payoutCalculator';
 
@@ -21,8 +22,19 @@ export default function PlayerProfile({ player, onClose }) {
     notes: player.notes || '',
   });
 
+  // Unified history: tournament finishes + cash sessions, newest first.
   const history = useLiveQuery(
-    () => tournamentsRepo.getResultsForPlayer(player.id),
+    async () => {
+      const [tourneys, cash] = await Promise.all([
+        tournamentsRepo.getResultsForPlayer(player.id),
+        cashSessionsRepo.getResultsForPlayer(player.id),
+      ]);
+      const rows = [
+        ...tourneys.map((t) => ({ kind: 'tournament', when: t.completedAt || 0, ...t })),
+        ...cash.map((c) => ({ kind: 'cash', when: c.endedAt || 0, ...c })),
+      ];
+      return rows.sort((a, b) => b.when - a.when);
+    },
     [player.id],
     undefined
   );
@@ -50,7 +62,8 @@ export default function PlayerProfile({ player, onClose }) {
         {!editing ? (
           <>
             <div className="profile-stats">
-              <Stat label="Events" value={stats.tournamentsPlayed || 0} />
+              <Stat label="Tourneys" value={stats.tournamentsPlayed || 0} />
+              <Stat label="Cash" value={stats.cashSessionsPlayed || 0} />
               <Stat label="Wins" value={stats.firstPlaces || 0} />
               <Stat label="Final Tables" value={stats.finalTables || 0} />
               <Stat
@@ -78,18 +91,24 @@ export default function PlayerProfile({ player, onClose }) {
               <p className="text-muted" style={{ fontSize: '0.88rem' }}>No events recorded yet.</p>
             )}
             <div className="profile-history">
-              {(history || []).map((h) => (
-                <div key={`${h.tournamentId}`} className="profile-history-row">
-                  <div className="profile-history-main">
-                    <div className="profile-history-name">{h.tournamentName}</div>
-                    <div className="text-muted" style={{ fontSize: '0.78rem' }}>{h.date}</div>
+              {(history || []).map((h) => {
+                const isCash = h.kind === 'cash';
+                return (
+                  <div key={isCash ? `c-${h.sessionId}` : `t-${h.tournamentId}`} className="profile-history-row">
+                    <div className="profile-history-main">
+                      <div className="profile-history-name">
+                        {isCash ? h.sessionName : h.tournamentName}
+                        <span className="profile-history-tag">{isCash ? '💵 cash' : '🃏 tourney'}</span>
+                      </div>
+                      <div className="text-muted" style={{ fontSize: '0.78rem' }}>{h.date}</div>
+                    </div>
+                    <div className="profile-history-finish">{isCash ? '—' : ORDINAL(h.finishPosition)}</div>
+                    <div className={`profile-history-net ${h.netProfit >= 0 ? 'text-green' : 'text-red'}`}>
+                      {h.netProfit >= 0 ? '+' : ''}{formatMoney(h.netProfit)}
+                    </div>
                   </div>
-                  <div className="profile-history-finish">{ORDINAL(h.finishPosition)}</div>
-                  <div className={`profile-history-net ${h.netProfit >= 0 ? 'text-green' : 'text-red'}`}>
-                    {h.netProfit >= 0 ? '+' : ''}{formatMoney(h.netProfit)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </>
         ) : (
@@ -116,7 +135,7 @@ export default function PlayerProfile({ player, onClose }) {
         .profile-modal { width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; }
         .profile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
         .profile-name { color: var(--gold); font-size: 1.4rem; }
-        .profile-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+        .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 8px; margin-bottom: 16px; }
         .profile-stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; text-align: center; }
         .profile-stat-val { font-weight: 900; font-size: 1.1rem; }
         .profile-stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
@@ -127,6 +146,7 @@ export default function PlayerProfile({ player, onClose }) {
         .profile-history-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
         .profile-history-main { flex: 1; min-width: 0; }
         .profile-history-name { font-weight: 700; font-size: 0.9rem; }
+        .profile-history-tag { font-size: 0.68rem; color: var(--muted); margin-left: 6px; font-weight: 500; }
         .profile-history-finish { font-weight: 800; color: var(--gold); }
         .profile-history-net { min-width: 70px; text-align: right; font-weight: 700; font-size: 0.9rem; }
         .text-green { color: var(--green-light); }

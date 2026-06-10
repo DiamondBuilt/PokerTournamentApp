@@ -6,6 +6,7 @@ const LINKS = [
   { to: '/tournament', label: 'Tournament', icon: '🃏' },
   { to: '/players', label: 'Players', icon: '👥' },
   { to: '/seasons', label: 'Seasons', icon: '🏆' },
+  { to: '/cash', label: 'Cash', icon: '💵' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 
