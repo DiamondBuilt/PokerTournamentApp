@@ -6,6 +6,10 @@ import {
   formatMoney,
 } from '../../utils/payoutCalculator';
 import { formatChips, BLIND_TEMPLATES } from '../../utils/blindStructures';
+import { linkPlayers } from '../../data/services/linkService';
+import { useData } from '../../context/DataContext';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
+import { seasonsRepo } from '../../data/repositories/seasonsRepo';
 
 function fmtTime(seconds) {
   const m = Math.floor(seconds / 60);
@@ -15,6 +19,12 @@ function fmtTime(seconds) {
 export default function ReviewSetup({ onPrev }) {
   const { state, dispatch } = useTournament();
   const { config, structure, players, payouts } = state;
+  const { settings } = useData();
+  const activeSeason = useLiveQuery(
+    () => seasonsRepo.getById(settings?.activeSeasonId || null),
+    [settings?.activeSeasonId],
+    null
+  );
 
   const playerCount = players.length;
   const totalEntries = playerCount * config.buyIn;
@@ -28,9 +38,17 @@ export default function ReviewSetup({ onPrev }) {
       )
     : [];
 
-  const startTournament = () => {
-    if (playerCount === 0) {
-      // Start with no players - fine, add later
+  const startTournament = async () => {
+    // Link each player to a persistent record (creating on first participation)
+    // and stamp the persistentId onto the live state via the existing
+    // UPDATE_PLAYER action. Degrades silently if offline storage is unavailable.
+    try {
+      const links = await linkPlayers(players);
+      links.forEach(({ id, persistentId }) =>
+        dispatch({ type: 'UPDATE_PLAYER', payload: { id, updates: { persistentId } } })
+      );
+    } catch (_) {
+      /* persistent linking is best-effort; the tournament starts regardless */
     }
     dispatch({ type: 'START_TOURNAMENT' });
   };
@@ -134,6 +152,11 @@ export default function ReviewSetup({ onPrev }) {
 
       {/* Start button */}
       <div className="start-section mt-6">
+        {activeSeason && (
+          <div className="season-note mb-4">
+            🏆 Results will count toward <strong>{activeSeason.name}</strong>
+          </div>
+        )}
         {playerCount === 0 && (
           <div className="warn-box mb-4">
             ⚠️ No players added. You can still start and add players during the tournament.
@@ -215,6 +238,13 @@ export default function ReviewSetup({ onPrev }) {
         .payout-compact-pos { font-size: 1.1rem; }
         .payout-compact-pct { color: var(--muted); font-size: 0.82rem; }
         .payout-compact-amt { font-weight: 800; color: var(--gold); }
+        .season-note {
+          background: rgba(245,158,11,0.08);
+          border: 1px solid var(--gold-dark);
+          border-radius: var(--radius);
+          padding: 12px 16px;
+          font-size: 0.88rem;
+        }
         .warn-box {
           background: rgba(245,158,11,0.1);
           border: 1px solid var(--gold);
