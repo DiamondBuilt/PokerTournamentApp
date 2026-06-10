@@ -1,16 +1,19 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTournament } from '../../context/TournamentContext';
 import NavBar from './NavBar';
 
 /**
  * App chrome wrapper. Renders the nav and the routed content — but hides the
- * nav while a tournament is actively running so the live clock keeps the
- * full-screen, undistracting experience the core was built around.
+ * nav while a tournament is actively running (the live clock keeps the
+ * full-screen experience the core was built around) and on the spectator
+ * route, which is a clean read-only TV display.
  */
 export default function AppShell({ children }) {
   const { state } = useTournament();
+  const { pathname } = useLocation();
   const { phase } = state.tournament;
-  const fullscreen = phase === 'running';
+  const fullscreen = phase === 'running' || pathname === '/spectator';
 
   return (
     <div className="app-shell">

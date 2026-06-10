@@ -46,8 +46,14 @@ export default function HomeDashboard() {
         <button className="home-action btn-green" onClick={() => navigate('/tournament')}>
           🃏 New Tournament
         </button>
+        <button className="home-action btn-ghost" onClick={() => navigate('/cash')}>
+          💵 New Cash Session
+        </button>
         <button className="home-action btn-ghost" onClick={() => navigate('/players')}>
           👥 Players{playerCount != null ? ` (${playerCount})` : ''}
+        </button>
+        <button className="home-action btn-ghost" onClick={() => window.open('#/spectator', '_blank')}>
+          📺 Spectator View
         </button>
       </div>
 

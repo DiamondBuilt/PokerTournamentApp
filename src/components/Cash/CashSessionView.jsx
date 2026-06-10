@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { cashSessionsRepo } from '../../data/repositories/cashSessionsRepo';
-import { playersRepo } from '../../data/repositories/playersRepo';
+import PlayerPicker from '../Shared/PlayerPicker';
 import {
   sessionTotals,
   addPlayer,
@@ -16,8 +16,6 @@ import { formatMoney } from '../../utils/payoutCalculator';
 /** Live view of one cash session. Reads itself live so edits persist & reflect. */
 export default function CashSessionView({ sessionId, onBack }) {
   const session = useLiveQuery(() => cashSessionsRepo.getById(sessionId), [sessionId], undefined);
-  const directory = useLiveQuery(() => playersRepo.getAll(), [], []);
-  const [name, setName] = useState('');
   const [buyIn, setBuyIn] = useState('');
   const [ending, setEnding] = useState(false);
 
@@ -34,13 +32,6 @@ export default function CashSessionView({ sessionId, onBack }) {
   const ended = session.status === 'ended';
   const totals = sessionTotals(session);
 
-  const handleAdd = async () => {
-    if (!name.trim()) return;
-    await addPlayer(session, name, Number(buyIn) || 0);
-    setName('');
-    setBuyIn('');
-  };
-
   const handleEnd = async () => {
     await finalizeSession(session);
     setEnding(false);
@@ -53,10 +44,6 @@ export default function CashSessionView({ sessionId, onBack }) {
     const m = mins % 60;
     return h > 0 ? `${h}h ${m}m` : `${m}m`;
   };
-
-  // Names already seated, for autocomplete filtering.
-  const seated = new Set(session.players.map((p) => p.persistentId));
-  const suggestions = directory.filter((p) => !seated.has(p.id));
 
   return (
     <div className="cash-view fade-in">
@@ -139,22 +126,9 @@ export default function CashSessionView({ sessionId, onBack }) {
         ))}
       </div>
 
-      {/* Add player */}
+      {/* Add player — set the buy-in, then pick a name (or type a new one) */}
       {!ended && (
         <div className="cash-add card">
-          <input
-            className="cash-add-name"
-            list="cash-player-suggestions"
-            placeholder="Player name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-          />
-          <datalist id="cash-player-suggestions">
-            {suggestions.map((p) => (
-              <option key={p.id} value={p.name} />
-            ))}
-          </datalist>
           <input
             className="cash-add-buyin"
             type="number"
@@ -162,9 +136,12 @@ export default function CashSessionView({ sessionId, onBack }) {
             placeholder="Buy-in"
             value={buyIn}
             onChange={(e) => setBuyIn(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
           />
-          <button className="btn-green btn-sm" onClick={handleAdd}>Add</button>
+          <PlayerPicker
+            excludeNames={session.players.map((p) => p.name)}
+            onPick={(pickedName) => addPlayer(session, pickedName, Number(buyIn) || 0)}
+            placeholder="Search saved players or type a new name…"
+          />
         </div>
       )}
 
