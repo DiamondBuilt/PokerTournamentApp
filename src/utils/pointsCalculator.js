@@ -64,7 +64,14 @@ export function scoreCashResult(rules, row, durationMs) {
   let points = rules.cash.attendance;
   const hours = durationMs > 0 ? durationMs / 3_600_000 : 0;
   if (hours > 0 && row.netProfit > 0) {
-    points += Math.round((row.netProfit / hours) * rules.cash.pointsPerProfitHour);
+    // Floor the effective duration so a very short session (e.g. someone who
+    // bought in and cashed out in minutes) can't explode profit-per-hour into
+    // an absurd point total.
+    const effectiveHours = Math.max(hours, MIN_CASH_HOURS);
+    points += Math.round((row.netProfit / effectiveHours) * rules.cash.pointsPerProfitHour);
   }
   return points;
 }
+
+/** Sessions shorter than this are scored as if they ran this long. */
+const MIN_CASH_HOURS = 0.5;
