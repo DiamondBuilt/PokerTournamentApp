@@ -5,6 +5,7 @@ import {
   formatMoney,
 } from '../../utils/payoutCalculator';
 import { playLevelUpChime } from '../../utils/audioManager';
+import { archiveCurrentTournament } from '../../data/services/archiveService';
 
 // Confetti particle component
 function ConfettiCanvas() {
@@ -104,6 +105,14 @@ export default function WinnerScreen() {
   });
 
   const winner = ranked[0];
+
+  // Archive the completed tournament to the persistent store exactly once.
+  // The service is idempotent (deterministic dedupKey + in-flight guard), so
+  // StrictMode's double-mount and reload-while-complete never duplicate it.
+  useEffect(() => {
+    archiveCurrentTournament(state, { prizePool, payoutList, ranked }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getPayout = (position) => {
     const entry = payoutList.find((p) => p.position === position);
