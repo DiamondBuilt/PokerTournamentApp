@@ -5,6 +5,7 @@ const LINKS = [
   { to: '/', label: 'Home', icon: '🏠', end: true },
   { to: '/tournament', label: 'Tournament', icon: '🃏' },
   { to: '/players', label: 'Players', icon: '👥' },
+  { to: '/seasons', label: 'Seasons', icon: '🏆' },
   { to: '/settings', label: 'Settings', icon: '⚙️' },
 ];
 

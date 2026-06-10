@@ -5,15 +5,22 @@ import { useData } from '../../context/DataContext';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { tournamentsRepo } from '../../data/repositories/tournamentsRepo';
 import { playersRepo } from '../../data/repositories/playersRepo';
+import { computeStandings } from '../../data/services/standingsService';
 import { formatMoney } from '../../utils/payoutCalculator';
 
 export default function HomeDashboard() {
   const navigate = useNavigate();
   const { state } = useTournament();
-  const { dbAvailable } = useData();
+  const { dbAvailable, settings } = useData();
 
   const recent = useLiveQuery(() => tournamentsRepo.getAllRecent(), [], undefined);
   const playerCount = useLiveQuery(() => playersRepo.count(), [], undefined);
+  const activeSeasonId = settings?.activeSeasonId || null;
+  const seasonData = useLiveQuery(
+    () => (activeSeasonId ? computeStandings(activeSeasonId) : Promise.resolve(null)),
+    [activeSeasonId],
+    undefined
+  );
 
   const phase = state.tournament.phase;
   const hasLiveTournament = phase !== 'setup';
@@ -43,6 +50,34 @@ export default function HomeDashboard() {
           👥 Players{playerCount != null ? ` (${playerCount})` : ''}
         </button>
       </div>
+
+      {seasonData?.season && (
+        <section className="home-section">
+          <div className="home-season-head">
+            <h2 className="home-section-title">🏆 {seasonData.season.name}</h2>
+            <button className="btn-ghost btn-sm" onClick={() => navigate('/seasons')}>
+              Full standings →
+            </button>
+          </div>
+          {seasonData.standings.length === 0 ? (
+            <p className="text-muted home-empty">
+              No events scored yet — finish a tournament and the standings appear here.
+            </p>
+          ) : (
+            <div className="home-standings card">
+              {seasonData.standings.slice(0, 5).map((s, i) => (
+                <div key={s.persistentId} className="home-standing-row">
+                  <span className="home-standing-rank">
+                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
+                  </span>
+                  <span className="home-standing-name">{s.name}</span>
+                  <span className="home-standing-points text-gold">{s.points} pts</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="home-section">
         <h2 className="home-section-title">Recent Events</h2>
@@ -97,9 +132,19 @@ export default function HomeDashboard() {
         .home-resume-name { font-weight: 800; font-size: 1.1rem; }
         .home-actions { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
         .home-action { flex: 1; min-width: 160px; padding: 18px; font-size: 1.05rem; }
+        .home-section { margin-bottom: 28px; }
         .home-section-title {
           font-size: 1rem; font-weight: 800; color: var(--gold); margin-bottom: 12px;
         }
+        .home-season-head {
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        .home-season-head .home-section-title { margin-bottom: 0; }
+        .home-standings { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .home-standing-row { display: flex; align-items: center; gap: 12px; }
+        .home-standing-rank { min-width: 28px; text-align: center; font-weight: 800; color: var(--muted); }
+        .home-standing-name { flex: 1; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .home-standing-points { font-weight: 900; }
         .home-empty { font-size: 0.9rem; padding: 8px 0; }
         .home-events { display: flex; flex-direction: column; gap: 8px; }
         .home-event { display: flex; align-items: center; justify-content: space-between; gap: 16px; }

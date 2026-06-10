@@ -9,4 +9,5 @@ export { seasonsRepo } from './repositories/seasonsRepo';
 export { settingsRepo, DEFAULT_SETTINGS } from './repositories/settingsRepo';
 export { linkPlayers } from './services/linkService';
 export { archiveCurrentTournament } from './services/archiveService';
+export { computeStandings } from './services/standingsService';
 export { exportAll, importFile, buildBackup } from './services/backupService';

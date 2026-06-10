@@ -2,7 +2,7 @@
    Offline-first runtime cache so the clock keeps working without a network
    (e.g. a tablet on the poker table that drops Wi-Fi). Bump CACHE_VERSION to
    force clients onto a fresh cache after a deploy. */
-const CACHE_VERSION = 'ptd-v3';
+const CACHE_VERSION = 'ptd-v4';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {

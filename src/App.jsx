@@ -7,6 +7,7 @@ import AppShell from './components/Shell/AppShell';
 import HomeDashboard from './components/Home/HomeDashboard';
 import TournamentRoute from './routes/TournamentRoute';
 import PlayersPage from './components/Players/PlayersPage';
+import SeasonsPage from './components/Seasons/SeasonsPage';
 import SettingsPage from './components/Settings/SettingsPage';
 
 function AppRoutes() {
@@ -30,6 +31,7 @@ function AppRoutes() {
         <Route path="/" element={<HomeDashboard />} />
         <Route path="/tournament" element={<TournamentRoute />} />
         <Route path="/players" element={<PlayersPage />} />
+        <Route path="/seasons" element={<SeasonsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
