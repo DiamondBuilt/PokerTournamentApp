@@ -18,6 +18,7 @@ export default function CashSessionView({ sessionId, onBack }) {
   const session = useLiveQuery(() => cashSessionsRepo.getById(sessionId), [sessionId], undefined);
   const [buyIn, setBuyIn] = useState('');
   const [ending, setEnding] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   if (session === undefined) return null;
   if (!session) {
@@ -32,7 +33,6 @@ export default function CashSessionView({ sessionId, onBack }) {
   const ended = session.status === 'ended';
   const totals = sessionTotals(session);
 
-  const [saving, setSaving] = useState(false);
   const handleEnd = async () => {
     if (saving) return;
     setSaving(true);
