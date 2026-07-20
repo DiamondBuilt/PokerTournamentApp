@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
 import { useTournament } from '../../context/TournamentContext';
+import PlayerPicker from '../Shared/PlayerPicker';
 
 export default function PlayerSetup({ onNext, onPrev }) {
   const { state, dispatch } = useTournament();
   const { players } = state;
-  const [newName, setNewName] = useState('');
   const [bulkText, setBulkText] = useState('');
   const [showBulk, setShowBulk] = useState(false);
 
   const addPlayer = (name) => {
     const trimmed = name.trim();
     if (!trimmed) return;
+    // Don't seat the same name twice.
+    if (players.some((p) => p.name.toLowerCase() === trimmed.toLowerCase())) return;
     dispatch({ type: 'ADD_PLAYER', payload: { name: trimmed } });
-  };
-
-  const handleAddSingle = (e) => {
-    e.preventDefault();
-    addPlayer(newName);
-    setNewName('');
   };
 
   const handleBulkAdd = () => {
@@ -43,18 +39,14 @@ export default function PlayerSetup({ onNext, onPrev }) {
         Add players to the tournament. You can also add players once the tournament starts.
       </p>
 
-      {/* Add player form */}
+      {/* Add player form — pick from the saved directory or type a new name */}
       <div className="card mt-4">
-        <form onSubmit={handleAddSingle} style={{ display: 'flex', gap: 10 }}>
-          <input
-            type="text"
-            placeholder="Player name..."
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
+        <div style={{ display: 'flex', gap: 10 }}>
+          <PlayerPicker
+            excludeNames={players.map((p) => p.name)}
+            onPick={addPlayer}
+            placeholder="Search saved players or type a new name…"
           />
-          <button type="submit" className="btn-green" disabled={!newName.trim()}>
-            + Add
-          </button>
           <button
             type="button"
             className="btn-ghost"
@@ -62,7 +54,7 @@ export default function PlayerSetup({ onNext, onPrev }) {
           >
             Bulk
           </button>
-        </form>
+        </div>
 
         {showBulk && (
           <div className="mt-4">

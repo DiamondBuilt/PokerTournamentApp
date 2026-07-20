@@ -18,4 +18,34 @@ export const cashSessionsRepo = {
   getBySeason(seasonId) {
     return db.cashSessions.where('seasonId').equals(seasonId).toArray();
   },
+
+  /** The single in-progress session, if any (home games run one table). */
+  getActive() {
+    return db.cashSessions.filter((s) => s.status === 'active').first();
+  },
+
+  /**
+   * Every ended-session row that references a persistent player — feeds the
+   * player profile history alongside tournament results.
+   */
+  async getResultsForPlayer(persistentId) {
+    const all = await base.getAll();
+    const rows = [];
+    for (const s of all) {
+      if (s.status !== 'ended') continue;
+      for (const p of s.players || []) {
+        if (p.persistentId === persistentId) {
+          rows.push({
+            sessionId: s.id,
+            sessionName: s.name,
+            date: s.date,
+            endedAt: s.endedAt,
+            stakes: s.stakes,
+            ...p,
+          });
+        }
+      }
+    }
+    return rows.sort((a, b) => (b.endedAt || 0) - (a.endedAt || 0));
+  },
 };

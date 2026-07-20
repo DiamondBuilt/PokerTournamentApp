@@ -103,29 +103,44 @@ export async function importFile(file) {
     db.seasons,
     db.settings,
     async () => {
-      // Players: merge by id, guard against nameKey collisions.
+      // Players: merge by id, guard against nameKey collisions. Build a map
+      // from each incoming player id to the local id we'll actually use, so
+      // event records that reference a skipped player get remapped to the
+      // existing local record instead of pointing at a missing id.
       const existingPlayers = await db.players.toArray();
       const byId = new Map(existingPlayers.map((p) => [p.id, p]));
       const byNameKey = new Map(existingPlayers.map((p) => [p.nameKey, p]));
+      const idMap = new Map();
       for (const incoming of data.players || []) {
         const nameKey = incoming.nameKey || toNameKey(incoming.name);
         const sameId = byId.get(incoming.id);
         const sameName = byNameKey.get(nameKey);
         if (sameId) {
           await db.players.put({ ...incoming, nameKey });
+          idMap.set(incoming.id, incoming.id);
           summary.players.updated += 1;
         } else if (sameName) {
-          // A different id but a name we already have — keep existing.
+          // A different id but a name we already have — keep existing, and
+          // remap this incoming id onto it.
+          idMap.set(incoming.id, sameName.id);
           summary.players.skipped += 1;
         } else {
           await db.players.put({ ...incoming, nameKey });
-          byNameKey.set(nameKey, incoming);
+          byNameKey.set(nameKey, { ...incoming, nameKey });
+          idMap.set(incoming.id, incoming.id);
           summary.players.added += 1;
         }
       }
 
-      await mergeTable(db.tournaments, data.tournaments, summary.tournaments);
-      await mergeTable(db.cashSessions, data.cashSessions, summary.cashSessions);
+      const remapId = (pid) => idMap.get(pid) || pid;
+      await mergeTable(db.tournaments, data.tournaments, summary.tournaments, (t) => ({
+        ...t,
+        results: (t.results || []).map((r) => ({ ...r, persistentId: remapId(r.persistentId) })),
+      }));
+      await mergeTable(db.cashSessions, data.cashSessions, summary.cashSessions, (c) => ({
+        ...c,
+        players: (c.players || []).map((p) => ({ ...p, persistentId: remapId(p.persistentId) })),
+      }));
       await mergeTable(db.seasons, data.seasons, summary.seasons);
 
       if (data.settings) {
@@ -138,10 +153,11 @@ export async function importFile(file) {
   return summary;
 }
 
-async function mergeTable(table, records, counter) {
+async function mergeTable(table, records, counter, transform) {
   for (const rec of records || []) {
-    const existing = await table.get(rec.id);
-    await table.put(rec);
+    const out = transform ? transform(rec) : rec;
+    const existing = await table.get(out.id);
+    await table.put(out);
     if (existing) counter.updated += 1;
     else counter.added += 1;
   }

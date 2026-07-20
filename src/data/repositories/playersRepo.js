@@ -65,13 +65,18 @@ export const playersRepo = {
    */
   async ensureByName(name, extra = {}) {
     const nameKey = toNameKey(name);
-    if (nameKey) {
-      const existing = await db.players.where('nameKey').equals(nameKey).first();
-      if (existing) return existing;
-    }
-    const player = makePlayer(name, extra);
-    await db.players.put(player);
-    return player;
+    // Check-then-create runs inside one transaction so two concurrent callers
+    // (e.g. the archive resolving several players at once) can't each miss the
+    // existing record and create duplicates that share a nameKey.
+    return db.transaction('rw', db.players, async () => {
+      if (nameKey) {
+        const existing = await db.players.where('nameKey').equals(nameKey).first();
+        if (existing) return existing;
+      }
+      const player = makePlayer(name, extra);
+      await db.players.put(player);
+      return player;
+    });
   },
 
   /**

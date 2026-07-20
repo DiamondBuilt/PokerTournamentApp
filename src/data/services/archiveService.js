@@ -2,6 +2,7 @@ import { openDb } from '../db';
 import { playersRepo } from '../repositories/playersRepo';
 import { tournamentsRepo } from '../repositories/tournamentsRepo';
 import { settingsRepo } from '../repositories/settingsRepo';
+import { seasonsRepo } from '../repositories/seasonsRepo';
 
 /** Deterministic key so re-archiving the same completed event is a no-op. */
 function buildDedupKey(state) {
@@ -106,6 +107,16 @@ async function doArchive(state, computed, dedupKey) {
   };
 
   await tournamentsRepo.add(record);
+
+  // Register the event with its season (eventIds is a denormalized
+  // convenience; the source of truth remains the record's seasonId).
+  if (seasonId) {
+    const season = await seasonsRepo.getById(seasonId);
+    if (season) {
+      const eventIds = [...new Set([...(season.eventIds || []), record.id])];
+      await seasonsRepo.upsert({ ...season, eventIds });
+    }
+  }
 
   // Roll results into lifetime player stats.
   for (const r of results) {

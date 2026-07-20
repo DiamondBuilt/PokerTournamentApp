@@ -10,6 +10,7 @@ import PlayerManagement from '../Players/PlayerManagement';
 import BlindSchedule from '../Schedule/BlindSchedule';
 import PayoutView from '../Payouts/PayoutView';
 import ThemePicker from '../ThemePicker';
+import PlayerPicker from '../Shared/PlayerPicker';
 
 export default function Dashboard() {
   const { state, dispatch } = useTournament();
@@ -17,7 +18,6 @@ export default function Dashboard() {
   const { pause, resume, advanceLevel, previousLevel } = useTimer();
 
   const [showModal, setShowModal] = useState(null); // 'eliminate' | 'players' | 'schedule' | 'payouts' | null
-  const [addPlayerName, setAddPlayerName] = useState('');
   const [muted, setMutedState] = useState(isMuted());
 
   const isPlaying = tournament.status === 'playing';
@@ -36,11 +36,11 @@ export default function Dashboard() {
   const currentLevelData = structure.levels[tournament.currentLevel - 1] || structure.levels[0];
   const activePlayers = players.filter((p) => p.status === 'active');
 
-  const handleAddPlayer = (e) => {
-    e.preventDefault();
-    if (!addPlayerName.trim()) return;
-    dispatch({ type: 'ADD_PLAYER', payload: { name: addPlayerName.trim() } });
-    setAddPlayerName('');
+  const handleAddPlayer = (name) => {
+    const trimmed = (name || '').trim();
+    if (!trimmed) return;
+    if (players.some((p) => p.name.toLowerCase() === trimmed.toLowerCase())) return;
+    dispatch({ type: 'ADD_PLAYER', payload: { name: trimmed } });
   };
 
   const handleReset = () => {
@@ -134,6 +134,13 @@ export default function Dashboard() {
             >
               {muted ? '🔇 Muted' : '🔔 Sound'}
             </button>
+            <button
+              className="ctrl-sm"
+              onClick={() => window.open('#/spectator', '_blank')}
+              title="Open the read-only spectator view in a new tab"
+            >
+              📺 Spectator
+            </button>
             <button className="ctrl-sm ctrl-reset" onClick={handleReset}>
               ↩ Reset
             </button>
@@ -148,19 +155,15 @@ export default function Dashboard() {
             <span className="badge badge-green">{activePlayers.length} Active</span>
           </div>
 
-          {/* Quick add player */}
-          <form onSubmit={handleAddPlayer} className="quick-add">
-            <input
-              type="text"
-              placeholder="Add player..."
-              value={addPlayerName}
-              onChange={(e) => setAddPlayerName(e.target.value)}
-              className="quick-add-input"
+          {/* Quick add player — picks from the saved directory */}
+          <div className="quick-add">
+            <PlayerPicker
+              excludeNames={players.map((p) => p.name)}
+              onPick={handleAddPlayer}
+              placeholder="Add player…"
+              compact
             />
-            <button type="submit" className="quick-add-btn" disabled={!addPlayerName.trim()}>
-              +
-            </button>
-          </form>
+          </div>
 
           {/* Player list */}
           <div className="player-list">

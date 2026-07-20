@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { openDb, isDbAvailable } from '../data/db';
 import { settingsRepo } from '../data/repositories/settingsRepo';
 import { applyTheme } from '../utils/themes';
+import { setMuted } from '../utils/audioManager';
 
 const DataContext = createContext(null);
 
@@ -27,7 +28,11 @@ export function DataProvider({ children }) {
       if (ok) {
         try {
           const s = await settingsRepo.get();
-          if (!cancelled) setSettings(s);
+          if (!cancelled) {
+            setSettings(s);
+            // Honor the persisted sound preference from the first tick.
+            setMuted(s.soundEnabled === false);
+          }
         } catch {
           /* ignore */
         }
